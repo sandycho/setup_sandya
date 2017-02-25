@@ -11,6 +11,9 @@ log_info="INFO >"
 log_warning="WARNING >"
 TASK_NUM=0
 
+#SUCCESS FLAG
+success_flag=-1
+
 #INFO MSG
 ALREADY_INSTALL="Already installed."
 ALREADY_DOWNLOADED="Already downloaded."
@@ -53,6 +56,7 @@ function task_counter {
 }
 
 function check_result {
+
 	if [ $? -ne 0 ]; then
 		output=$(log_ok "$1")
 		echo $output
@@ -64,10 +68,14 @@ function check_result {
 		echo $output >> log.txt
 		result=1
 	fi
+	
+	if [ $success_flag -lt 1 ]; then
+		success_flag=$result
+	fi
 }
 
 function check_condition_result {
-	if [ $2 ]; then 
+	if [ -n $2 ]; then 
 		output=$(log_ok "$1")
 		echo $output
 		echo $output >> log.txt
@@ -79,6 +87,9 @@ function check_condition_result {
 		result=1
 	fi
 	
+	if [ $success_flag -lt 1 ]; then
+		success_flag=$result
+	fi
 }
 
 
@@ -90,29 +101,18 @@ output=$(echo "$log_info `date`")
 echo $output
 echo $output > log.txt
 
-task_counter
-#making a directory
-mkdir ~/test_bash_dir_del2
-check_result "Making dir ~/test_bash_dir_del2"
-
-task_counter
-#apt-get update
-ps
-check_result "ps"
-
 #-----------------------------------------------------------------------------------------------
 task_counter
 #Git
 prog_path=`which git`
 check_condition_result "Checking Git installation..." ""$prog_path""
-log 0 "Is notepadqq installed?"
 if [ $result = 0 ]; then
 	log 1 "$ALREADY_INSTALL"
 else
 	task_desc="Installing Git..."
-	log 0 $task_desc
+	log 0 "$task_desc"
 	apt-get install -y git-all
-	check_result task_desc
+	check_result "$task_desc"
 fi
 
 #-----------------------------------------------------------------------------------------------
@@ -120,8 +120,7 @@ task_counter
 #JAVA 8u121
 prog_path=`which java`
 check_condition_result "Checking Java installation..." ""$prog_path""
-#if [ $result = 0 ]; then
-if [ 0=0 ]; then
+if [ $result = 0 ]; then
 	log 1 "$ALREADY_INSTALL"
 else
 	task_desc="Installing Java8u121..."
@@ -146,31 +145,50 @@ else
 	else
 		mkdir -p /usr/java
 		tar zxvf jdk-*-linux-x64.tar.gz --directory="/usr/java"
-		check_result $task_desc
+		check_result "$task_desc"
 	fi
 	
 	#removing tar.gz
 	task_desc="Removing tar.gz..."
 	if [ $result = 0 ]; then
-		rm -R jdk-*-linux-x64.tar.gz
+		#rm -R jdk-*-linux-x64.tar.gz
+		echo "COMMENT..."
+		check_result "$task_desc"
 	fi
-	check_result $task_desc
 fi
 
 #-----------------------------------------------------------------------------------------------
 task_counter
 #Maven
-proc_name="Maven"
+proc_name="Maven3"
+maven_version="3.3.9"
 prog_path=`which mvn`
 check_condition_result "Checking $proc_name installation..." ""$prog_path""
 if [ $result = 0 ]; then
 	log 1 "$ALREADY_INSTALL"
 else
 	task_desc="Installing $proc_name..."
-	log 0 $task_desc
-	#
-	pwd
-	check_result $task_desc
+	log 0 "$task_desc"
+	
+	prog_path=`find apache-maven-$maven_version-bin.tar.gz`
+	check_condition_result "Checking $proc_name download..." ""$prog_path""
+	if [ $result = 0 ]; then
+		log 1 "$ALREADY_DOWNLOADED"
+	else
+		wget http://apache.rediris.es/maven/maven-3/$maven_version/binaries/apache-maven-$maven_version-bin.tar.gz
+		tar zxvf apache-maven-$maven_version-bin.tar.gz
+		mv apache-maven-$maven_version /usr/opt
+		check_result "$task_desc"
+	fi
+	
+	
+	#removing tar.gz
+	task_desc="Removing tar.gz..."
+	if [ $result = 0 ]; then
+		#rm -R apahce-maven-$maven_version-bin.tar.gz
+		echo "COMMENT..."
+		check_result "$task_desc"
+	fi
 fi
 
 #-----------------------------------------------------------------------------------------------
@@ -183,12 +201,12 @@ if [ $result = 0 ]; then
 	log 1 "$ALREADY_INSTALL"
 else
 	task_desc="Installing $proc_name..."
-	log 0 $task_desc
+	log 0 "$task_desc"
 	apt-get install -y software-properties-common
 	apt-add-repository ppa:ansible/ansible
 	apt-get update
 	apt-get install -y ansible
-	check_result $task_desc
+	check_result "$task_desc"
 fi
 
 #-----------------------------------------------------------------------------------------------
@@ -196,7 +214,6 @@ task_counter
 #Notepadqq
 prog_path=`which notepadqq`
 check_condition_result "Checking Notepadqq installation..." ""$prog_path""
-log 0 "Is notepadqq installed?"
 if [ $result = 0 ]; then
 	log 1 "$ALREADY_INSTALL"
 else
@@ -213,13 +230,13 @@ if [ $result = 0 ]; then
 	log 1 "$ALREADY_INSTALL"
 else
 	task_desc="Installing $proc_name..."
-	log 0 $task_desc
+	log 0 "$task_desc"
 	
 	curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
 	sudo apt-get install -y nodejs
 	sudo apt-get install -y build-essential
 	
-	check_result $task_desc
+	check_result "$task_desc"
 fi
 
 #-----------------------------------------------------------------------------------------------
@@ -237,7 +254,7 @@ if [ $result = 0 ]; then
 	log 1 "$ALREADY_INSTALL"
 else
 	task_desc="Installing $proc_name..."
-	log 0 $task_desc
+	log 0 "$task_desc"
 	
 	#setup the repository
 	apt-get install -y --no-install-recommends apt-transport-https ca-certificates software-properties-common
@@ -255,11 +272,54 @@ else
 	#on production
 	#apt-cache madison docker-engine
 	
-	check_result $task_desc
+	check_result "$task_desc"
 fi
 
-
-
+#-----------------------------------------------------------------------------------------------
+#https://www.virtualbox.org/wiki/Linux_Downloads
+task_counter
+proc_name="VirtualBox"
+prog_path=`which virtualbox`
+check_condition_result "Checking $proc_name installation..." ""$prog_path""
+if [ $result = 0 ]; then
+	log 1 "$ALREADY_INSTALL"
+else
+	task_desc="Installing $proc_name..."
+	log 0 "$task_desc"
+	
+	#setup the repository
+	apt-key fingerprint 58118E89F3A912897C070ADBF76221572C52609D
+	sudo add-apt-repository \
+       "http://download.virtualbox.org/virtualbox/debian $(lsb_release -cs) contrib"
+	   
+	#keys 
+	wget -q https://www.virtualbox.org/download/oracle_vbox_2016.asc -O- | sudo apt-key add -
+	wget -q https://www.virtualbox.org/download/oracle_vbox.asc -O- | sudo apt-key add -
+	
+	#key fingerprint
+	apt-key fingerprint B9F8D658297AF3EFC18D5CDFA2F683C52980AECF
+	apt-key fingerprint 7B0FAB3A13B907435925D9C954422A4B98AB5139
+	   
+	#install
+	sudo apt-get update
+	sudo apt-get install virtualbox-5.1
+	
+	#Note: Ubuntu/Debian users might want to install the dkms package to ensure that the 
+	#virtualBox host kernel modules (vboxdrv, vboxnetflt and vboxnetadp) are properly updated 
+	#if the linux kernel version changes during the next apt-get upgrade.
+	sudo apt-get install dkms
+	
+	#What to do when experiencing The following signatures were invalid: BADSIG ... 
+	#when refreshing the packages from the repository? 
+	# sudo -s -H
+	# apt-get clean
+	# rm /var/lib/apt/lists/*
+	# rm /var/lib/apt/lists/partial/*
+	# apt-get clean
+	# apt-get update
+	
+	check_result "$task_desc"
+fi
 
 
 #-----------------------------------------------------------------------------------------------
@@ -272,5 +332,16 @@ fi
 #MANUAL SETTINGS
 
 #JAVA_HOME
+echo "WARNING!!!!"
 echo "MANUAL SETTINGS"
-echo -e "export JAVA_HOME=/usr/java/jdk1.8.0_121 && export PATH=\$JAVA_HOME/bin:\$PATH"
+echo -e "export JAVA_HOME=/usr/java/jdk1.8.0_121 && export PATH=\$JAVA_HOME/bin:\$PATH && export MAVEN3_HOME=/usr/opt/apache-maven-$maven_version && export PATH=\$MAVEN3_HOME/bin:\$PATH"
+
+echo "|----------------------------------------------"
+echo "|"
+if [ $success_flag = 0 ]; then
+	echo "|>>>>> BUILD SUCCESS"
+else
+	echo "|>>>>> BUILD FAILED: $success_flag"
+fi
+echo "|"
+echo "|----------------------------------------------"
