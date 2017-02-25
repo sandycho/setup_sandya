@@ -3,7 +3,7 @@ Script with basics dev tools, such as Java, Maven, Ansible, Heroku, Docker, Git,
 
 # RUN
 ```
-sudo chmod +x setup_sandya.sh \
+sudo chmod +x setup_sandya.sh
 sudo ./setup_sandya.sh
 ```
 
