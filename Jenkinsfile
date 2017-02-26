@@ -3,7 +3,6 @@ pipeline {
 	
 	stages {
 		stage('Build') {
-			when { currentBuild.result == 'SUCCESS' }
             steps {
                 echo 'Building..'
 				
