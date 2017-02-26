@@ -56,7 +56,7 @@ function task_counter {
 }
 
 function check_result {
-
+	# !!! YOU CANNOT PUT ANYTHING HERE !!!
 	if [ $? -ne 0 ]; then
 		output=$(log_ok "$1")
 		echo $output
@@ -75,7 +75,7 @@ function check_result {
 }
 
 function check_condition_result {
-	if [ -n $2 ]; then 
+	if eval $2; then 
 		output=$(log_ok "$1")
 		echo $output
 		echo $output >> log.txt
@@ -87,8 +87,12 @@ function check_condition_result {
 		result=1
 	fi
 	
-	if [ $success_flag -lt 1 ]; then
-		success_flag=$result
+	echo $2
+	
+	if eval $2; then
+		echo "true"
+	else
+		echo "false"
 	fi
 }
 
@@ -105,7 +109,7 @@ echo $output > log.txt
 task_counter
 #Git
 prog_path=`which git`
-check_condition_result "Checking Git installation..." ""$prog_path""
+check_condition_result "Checking Git installation..." '[[ -n $prog_path ]]'
 if [ $result = 0 ]; then
 	log 1 "$ALREADY_INSTALL"
 else
@@ -117,26 +121,41 @@ fi
 
 #-----------------------------------------------------------------------------------------------
 task_counter
-#JAVA 8u121
-prog_path=`which java`
-check_condition_result "Checking Java installation..." ""$prog_path""
+proc_name="Synaptic"
+prog_path=`which synaptic`
+check_condition_result "Checking $proc_name installation..." '[[ -n $prog_path ]]'
 if [ $result = 0 ]; then
 	log 1 "$ALREADY_INSTALL"
 else
-	task_desc="Installing Java8u121..."
+	task_desc="Installing $proc_name..."
+	log 0 "$task_desc"
+	apt-get install synaptic
+	check_result "$task_desc"
+fi
+
+#-----------------------------------------------------------------------------------------------
+task_counter
+proc_name="JAVA 8u121"
+prog_path=`which java`
+check_condition_result "Checking $proc_name installation..." '[[ -n $prog_path ]]'
+if [ $result = 0 ]; then
+	log 1 "$ALREADY_INSTALL"
+else
+	task_desc="Installing $proc_name..."
 	log 0 "$task_desc"
 	
 	
 	prog_path=`find jdk-8u121-linux-x64.tar.gz`
-	check_condition_result "Checking java download..." ""$prog_path""
+	check_condition_result "Checking java download..." '[[ -n $prog_path ]]'
 	if [ $result = 0 ]; then
 		log 1 "$ALREADY_DOWNLOADED"
 	else
-		wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/8u121-b13/e9e7ea248e2c4826b92b3f075a80e441/jdk-8u121-linux-x64.tar.gz
+		#wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/8u121-b13/e9e7ea248e2c4826b92b3f075a80e441/jdk-8u121-linux-x64.tar.gz
+		echo COMMENT
 	fi
 	
 	prog_path=`find /usr -type d -name jdk1.8.*_121`
-	check_condition_result "Checking java unzip in /usr/java/jdk1.8.*_121..." ""$prog_path""
+	check_condition_result "Checking java unzip in /usr/java/jdk1.8.*_121..." '[[ -n $prog_path ]]'
 	
 	#unzip
 	task_desc="Unzipping..."
@@ -163,7 +182,7 @@ task_counter
 proc_name="Maven3"
 maven_version="3.3.9"
 prog_path=`which mvn`
-check_condition_result "Checking $proc_name installation..." ""$prog_path""
+check_condition_result "Checking $proc_name installation..." '[[ -n $prog_path ]]'
 if [ $result = 0 ]; then
 	log 1 "$ALREADY_INSTALL"
 else
@@ -171,7 +190,7 @@ else
 	log 0 "$task_desc"
 	
 	prog_path=`find apache-maven-$maven_version-bin.tar.gz`
-	check_condition_result "Checking $proc_name download..." ""$prog_path""
+	check_condition_result "Checking $proc_name download..." '[[ -n $prog_path ]]'
 	if [ $result = 0 ]; then
 		log 1 "$ALREADY_DOWNLOADED"
 	else
@@ -196,7 +215,7 @@ task_counter
 #Ansible
 proc_name="Ansible"
 prog_path=`which ansible`
-check_condition_result "Checking $proc_name installation..." ""$prog_path""
+check_condition_result "Checking $proc_name installation..." '[[ -n $prog_path ]]'
 if [ $result = 0 ]; then
 	log 1 "$ALREADY_INSTALL"
 else
@@ -213,7 +232,7 @@ fi
 task_counter
 #Notepadqq
 prog_path=`which notepadqq`
-check_condition_result "Checking Notepadqq installation..." ""$prog_path""
+check_condition_result "Checking Notepadqq installation..." '[[ -n $prog_path ]]'
 if [ $result = 0 ]; then
 	log 1 "$ALREADY_INSTALL"
 else
@@ -225,7 +244,7 @@ fi
 task_counter
 proc_name="Nodejs"
 prog_path=`which nodejs`
-check_condition_result "Checking $proc_name installation..." ""$prog_path""
+check_condition_result "Checking $proc_name installation..." '[[ -n $prog_path ]]'
 if [ $result = 0 ]; then
 	log 1 "$ALREADY_INSTALL"
 else
@@ -249,7 +268,7 @@ fi
 task_counter
 proc_name="Docker"
 prog_path=`which docker`
-check_condition_result "Checking $proc_name installation..." ""$prog_path""
+check_condition_result "Checking $proc_name installation..." '[[ -n $prog_path ]]'
 if [ $result = 0 ]; then
 	log 1 "$ALREADY_INSTALL"
 else
@@ -280,7 +299,7 @@ fi
 task_counter
 proc_name="VirtualBox"
 prog_path=`which virtualbox`
-check_condition_result "Checking $proc_name installation..." ""$prog_path""
+check_condition_result "Checking $proc_name installation..." '[[ -n $prog_path ]]'
 if [ $result = 0 ]; then
 	log 1 "$ALREADY_INSTALL"
 else
@@ -318,6 +337,64 @@ else
 	# apt-get clean
 	# apt-get update
 	
+	check_result "$task_desc"
+fi
+
+#-----------------------------------------------------------------------------------------------
+#https://wiki.jenkins-ci.org/display/JENKINS/Installing+Jenkins+on+Ubuntu
+task_counter
+proc_name="Jenkins"
+prog_path=`which jenkins`
+check_condition_result "Checking $proc_name installation..." '[[ -n $prog_name ]]'
+if [ $result = 0 ]; then
+	log 1 "$ALREADY_INSTALL"
+else
+	task_desc="Installing $proc_name..."
+	log 0 "$task_desc"
+	
+	wget -q -O - https://pkg.jenkins.io/debian/jenkins-ci.org.key | sudo apt-key add -
+	sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
+	apt-get update
+	apt-get install jenkins
+
+	check_result "$task_desc"
+fi
+
+#-----------------------------------------------------------------------------------------------
+#https://wiki.jenkins-ci.org/display/JENKINS/Installing+Jenkins+on+Ubuntu
+task_counter
+proc_name="Heroku"
+prog_path=`which heroku`
+check_condition_result "Checking $proc_name installation..." '[[ -n $prog_path ]]'
+if [ $result = 0 ]; then
+	log 1 "$ALREADY_INSTALL"
+else
+	task_desc="Installing $proc_name..."
+	log 0 "$task_desc"
+	
+	 apt-get install software-properties-common # debian only
+	 add-apt-repository "deb https://cli-assets.heroku.com/branches/stable/apt ./"
+	 curl -L https://cli-assets.heroku.com/apt/release.key | sudo apt-key add -
+	 apt-get update
+	 apt-get install heroku
+	 
+	check_result "$task_desc"
+fi
+
+#-----------------------------------------------------------------------------------------------
+#https://wiki.jenkins-ci.org/display/JENKINS/Installing+Jenkins+on+Ubuntu
+task_counter
+proc_name="Test"
+prog_path=`which sandya-test1.0.0`
+check_condition_result "Checking $proc_name installation..." '[[ -n $prog_path ]]'
+if [ $result = 0 ]; then
+	log 1 "$ALREADY_INSTALL"
+else
+	task_desc="Installing $proc_name..."
+	log 0 "$task_desc"
+	
+	apt-get install sandya-test1.0.0
+
 	check_result "$task_desc"
 fi
 
